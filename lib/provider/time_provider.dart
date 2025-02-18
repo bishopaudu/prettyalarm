@@ -58,6 +58,8 @@ class TimeProvider extends ChangeNotifier {
   bool _isRunning = false;
   Timer? _timer;
 
+ bool get isRuning => _isRunning;
+
   void setTime(int mins, int secs) {
     minutes = mins;
     seconds = secs;
@@ -97,6 +99,6 @@ class TimeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  double get progress => _totalSeconds > 0 ? _elapsedSeconds / _totalSeconds : 0;
+  double get progress =>
+      _totalSeconds > 0 ? _elapsedSeconds / _totalSeconds : 0;
 }
-

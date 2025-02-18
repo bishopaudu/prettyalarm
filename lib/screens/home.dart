@@ -1,6 +1,7 @@
 import 'package:alarmui/provider/time_provider.dart';
 import 'package:alarmui/screens/custom_time_picker.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'package:alarmui/utils/custom_snackbar.dart';
+import 'package:alarmui/utils/daysofweek.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,7 +13,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<String> daysOfWeek = ['MON', 'TUE', 'WES', 'THU', 'SAT', 'SUN'];
   void onTimeCheck(int minutes, int seconds) {
     print({"minutes": minutes, "seconds": seconds});
     final timerProvider = Provider.of<TimeProvider>(context, listen: false);
@@ -24,9 +24,7 @@ class _HomeState extends State<Home> {
     if (timerProvider.minutes > 0 || timerProvider.seconds > 0) {
       timerProvider.startTime();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please select a time first")),
-      );
+     customSnackBar(context, "Please select time first");
     }
   }
 
@@ -52,8 +50,10 @@ class _HomeState extends State<Home> {
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(55),
                           topRight: Radius.circular(55),
-                          bottomLeft: Radius.circular(55),
-                          bottomRight: Radius.circular(55))),
+                        //  bottomLeft: Radius.circular(55),
+                          //bottomRight: Radius.circular(55)
+                          )
+                          ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -73,10 +73,6 @@ class _HomeState extends State<Home> {
                           ),
                         ],
                       ),
-                      /* CustomPaint(
-                        painter: ProgressPainter(5),
-                        size: const Size(double.infinity, 150),
-                      )*/
                       CustomPaint(
                         painter: ProgressPainter(timerProvider.progress),
                         size: const Size(double.infinity, 150),
@@ -95,72 +91,17 @@ class _HomeState extends State<Home> {
                               color: DateTime.now().weekday ==
                                       daysOfWeek.indexOf(day) + 1
                                   ? Colors.black
-                                  : Color(0xff59644c)),
+                                  : const Color(0xff59644c)),
                         ))
                     .toList(),
               ),
               const SizedBox(
                 height: 20,
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(
-                        3,
-                        (index) => Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 5),
-                              child: DottedBorder(
-                                color: Colors.black,
-                                strokeWidth: 3,
-                                dashPattern: [5, 5],
-                                borderType: BorderType.RRect,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  width: 300,
-                                  height: 120,
-                                  child: const Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceAround,
-                                        children: [
-                                          Text(
-                                            "9:42",
-                                            style: TextStyle(fontSize: 60),
-                                          ),
-                                          Icon(
-                                            Icons.play_arrow,
-                                            size: 70,
-                                          ),
-                                        ],
-                                      ),
-                                      Text(
-                                        "KIND OF BLUE",
-                                        style: TextStyle(
-                                            fontSize: 24,
-                                            color: Color(0xff59644c)),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )),
-                  ),
-                ),
-              )
-            ],
-          ),
-        ),
-        persistentFooterButtons: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                   IconButton(
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.black,
                   fixedSize: const Size(60, 60),
@@ -173,12 +114,26 @@ class _HomeState extends State<Home> {
                   color: Color(0xffa8c889),
                 ),
               ),
+              const SizedBox(width: 10,),
               IconButton(
+                  style: IconButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  fixedSize: const Size(60, 60),
+                ),
                 onPressed: () {
-                  timerProvider.pauseTimer();
+                  timerProvider.isRuning ? timerProvider.pauseTimer() : customSnackBar(context, "Timer is not running");
                 },
                 icon: const Icon(Icons.pause, color: Color(0xffa8c889)),
               ),
+                ],
+              )
+            ]
+          ),
+        ),
+        persistentFooterButtons: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
               SizedBox(
                   width: 200,
                   child: FloatingActionButton.extended(
@@ -190,7 +145,7 @@ class _HomeState extends State<Home> {
                     ),
                     shape: const StadiumBorder(),
                     backgroundColor: Colors.black,
-                    foregroundColor: Color(0xffa8c889),
+                    foregroundColor: const Color(0xffa8c889),
                   )),
               IconButton(
                 style: IconButton.styleFrom(
@@ -279,12 +234,17 @@ class ProgressPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     double barSpacing = size.width / totalBars;
+    double barHeight = size.height * 0.8; 
     int currentProgress = (progress * totalBars).toInt();
 
     for (int i = 0; i < totalBars; i++) {
       paint.color = i < currentProgress ? Colors.red : const Color(0xffa8c889);
-      canvas.drawLine(Offset(i * barSpacing, size.height),
-          Offset(i * barSpacing, 0), paint);
+     /* canvas.drawLine(Offset(i * barSpacing, size.height),
+          Offset(i * barSpacing, 0), paint);*/
+          canvas.drawLine(
+          Offset(i * barSpacing, size.height),  // Start from bottom
+          Offset(i * barSpacing, size.height - barHeight), // Reduce height
+          paint);
     }
   }
 
