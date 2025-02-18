@@ -1,6 +1,8 @@
+import 'package:alarmui/provider/time_provider.dart';
 import 'package:alarmui/screens/custom_time_picker.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -11,8 +13,26 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<String> daysOfWeek = ['MON', 'TUE', 'WES', 'THU', 'SAT', 'SUN'];
+  void onTimeCheck(int minutes, int seconds) {
+    print({"minutes": minutes, "seconds": seconds});
+    final timerProvider = Provider.of<TimeProvider>(context, listen: false);
+    timerProvider.setTime(minutes, seconds);
+  }
+
+  void startTimer() {
+    final timerProvider = Provider.of<TimeProvider>(context, listen: false);
+    if (timerProvider.minutes > 0 || timerProvider.seconds > 0) {
+      timerProvider.startTime();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please select a time first")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final timerProvider = Provider.of<TimeProvider>(context);
     return Container(
       color: const Color(0xffa8c889),
       child: Scaffold(
@@ -37,11 +57,11 @@ class _HomeState extends State<Home> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Column(
+                      Column(
                         children: [
-                          const Text(
-                            "10:00",
-                            style: TextStyle(
+                          Text(
+                            "${timerProvider.minutes.toString().padLeft(2, '0')}:${timerProvider.seconds.toString().padLeft(2, '0')}",
+                            style: const TextStyle(
                                 height: 0,
                                 fontSize: 150,
                                 color: Color(0xffa8c889)),
@@ -53,10 +73,14 @@ class _HomeState extends State<Home> {
                           ),
                         ],
                       ),
-                      CustomPaint(
+                      /* CustomPaint(
                         painter: ProgressPainter(5),
                         size: const Size(double.infinity, 150),
-                      )
+                      )*/
+                      CustomPaint(
+                        painter: ProgressPainter(timerProvider.progress),
+                        size: const Size(double.infinity, 150),
+                      ),
                     ],
                   ),
                 ),
@@ -141,19 +165,28 @@ class _HomeState extends State<Home> {
                   backgroundColor: Colors.black,
                   fixedSize: const Size(60, 60),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  startTimer();
+                },
                 icon: const Icon(
-                  Icons.calendar_month,
+                  Icons.play_arrow,
                   color: Color(0xffa8c889),
                 ),
+              ),
+              IconButton(
+                onPressed: () {
+                  timerProvider.pauseTimer();
+                },
+                icon: const Icon(Icons.pause, color: Color(0xffa8c889)),
               ),
               SizedBox(
                   width: 200,
                   child: FloatingActionButton.extended(
                     onPressed: () {},
-                    label: const Text(
-                      "10:00",
-                      style: TextStyle(fontSize: 30, color: Color(0xffa8c889)),
+                    label: Text(
+                      "${timerProvider.minutes.toString().padLeft(2, '0')}:${timerProvider.seconds.toString().padLeft(2, '0')}",
+                      style: const TextStyle(
+                          fontSize: 30, color: Color(0xffa8c889)),
                     ),
                     shape: const StadiumBorder(),
                     backgroundColor: Colors.black,
@@ -165,8 +198,12 @@ class _HomeState extends State<Home> {
                   fixedSize: const Size(60, 60),
                 ),
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => CustomTimePicker()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => CustomTimePicker(
+                                onTimeSelected: onTimeCheck,
+                              )));
                 },
                 icon: const Icon(
                   Icons.add,
@@ -181,7 +218,7 @@ class _HomeState extends State<Home> {
   }
 }
 
-class ProgressPainter extends CustomPainter {
+/*class ProgressPainter extends CustomPainter {
   final int totalBar = 40;
   final int currentProgress;
 
@@ -221,6 +258,33 @@ class ProgressPainter extends CustomPainter {
       path.lineTo(arrowx - 10, 40);
       path.close();
       canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+}*/
+class ProgressPainter extends CustomPainter {
+  final double progress;
+  final int totalBars = 40;
+
+  ProgressPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = 4
+      ..style = PaintingStyle.stroke;
+
+    double barSpacing = size.width / totalBars;
+    int currentProgress = (progress * totalBars).toInt();
+
+    for (int i = 0; i < totalBars; i++) {
+      paint.color = i < currentProgress ? Colors.red : const Color(0xffa8c889);
+      canvas.drawLine(Offset(i * barSpacing, size.height),
+          Offset(i * barSpacing, 0), paint);
     }
   }
 

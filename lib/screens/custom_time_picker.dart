@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CustomTimePicker extends StatefulWidget {
-  final void Function(int hour, int minute)? onTimeSelected;
+  final void Function(int minutes, int seconds)? onTimeSelected;
 
   const CustomTimePicker({super.key, this.onTimeSelected});
 
@@ -10,23 +10,23 @@ class CustomTimePicker extends StatefulWidget {
 }
 
 class _CustomTimePickerState extends State<CustomTimePicker> {
-  late FixedExtentScrollController _hourController;
-  late FixedExtentScrollController _minuteController;
+  late FixedExtentScrollController _minutesController;
+  late FixedExtentScrollController _secondsController;
 
-  int selectedHour = 0;
-  int selectedMinute = 0;
+  int selectedMinutes = 0;
+  int selectedSeconds = 0;
 
   @override
   void initState() {
-    _hourController = FixedExtentScrollController(initialItem: 0);
-    _minuteController = FixedExtentScrollController(initialItem: 0);
+    _minutesController = FixedExtentScrollController(initialItem: 0);
+    _secondsController = FixedExtentScrollController(initialItem: 0);
     super.initState();
   }
 
   @override
   void dispose() {
-    _hourController.dispose();
-    _minuteController.dispose();
+    _minutesController.dispose();
+    _secondsController.dispose();
     super.dispose();
   }
 
@@ -58,14 +58,14 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildWheelList(
-                          controller: _hourController,
+                          controller: _minutesController,
                           items: List.generate(24, (index) => index),
                           onChanged: (value) {
                             setState(() {
-                              selectedHour = value;
+                              selectedMinutes = value;
                             });
                             widget.onTimeSelected
-                                ?.call(selectedHour, selectedMinute);
+                                ?.call(selectedMinutes, selectedSeconds);
                           },
                         ),
                         const Padding(
@@ -77,14 +77,14 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                           ),
                         ),
                         _buildWheelList(
-                          controller: _minuteController,
+                          controller: _minutesController,
                           items: List.generate(60, (index) => index),
                           onChanged: (value) {
                             setState(() {
-                              selectedMinute = value;
+                              selectedMinutes = value;
                             });
                             widget.onTimeSelected
-                                ?.call(selectedHour, selectedMinute);
+                                ?.call(selectedMinutes, selectedSeconds);
                           },
                         )
                       ],
@@ -127,15 +127,23 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.check,
-                    color: Colors.black,
+                Ink(
+                  decoration: BoxDecoration(
+                     color: const Color(0xff98ac84),
+    shape: BoxShape.circle,
                   ),
-                  style: IconButton.styleFrom(
-                    fixedSize: const Size(80, 80),
-                    backgroundColor: const Color(0xff98ac84),
+                  child: IconButton(
+                    onPressed: () {
+                      if (widget.onTimeSelected != null) {
+                        widget.onTimeSelected!(selectedMinutes, selectedSeconds);
+                      }
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(
+                      Icons.check,
+                      color: Colors.black,
+                    ),
+                  
                   ),
                 ),
               ],

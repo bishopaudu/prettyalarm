@@ -1,8 +1,13 @@
+import 'package:alarmui/provider/time_provider.dart';
 import 'package:alarmui/screens/home.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TimeProvider(),
+      child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
